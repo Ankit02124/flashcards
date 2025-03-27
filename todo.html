@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>To-Do List</title>
+  <script src="../web tech/theme.js" defer></script>
+  <style>
+    /* Base styles */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background-color: #f8f9fa;
+      color: #333;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      line-height: 1.6;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    body.dark-mode {
+      background-color: #1a1a2e;
+      color: #e6e6e6;
+    }
+
+    /* Geometric background shapes */
+    body::before,
+    body::after {
+      content: '';
+      position: absolute;
+      z-index: -1;
+      opacity: 0.5;
+    }
+
+    /* Large circle */
+    body::before {
+      width: 500px;
+      height: 500px;
+      border-radius: 50%;
+      background: rgba(74, 107, 175, 0.15);
+      top: -200px;
+      right: -200px;
+    }
+
+    body.dark-mode::before {
+      background: rgba(106, 143, 216, 0.15);
+    }
+
+    /* Triangle */
+    body::after {
+      width: 0;
+      height: 0;
+      border-left: 300px solid transparent;
+      border-right: 300px solid transparent;
+      border-bottom: 500px solid rgba(106, 143, 216, 0.15);
+      bottom: -300px;
+      left: -150px;
+      transform: rotate(15deg);
+    }
+
+    body.dark-mode::after {
+      border-bottom-color: rgba(74, 107, 175, 0.15);
+    }
+
+    /* Header styles */
+    .header {
+      background-color: #ffffff;
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      position: relative;
+      z-index: 10;
+    }
+
+    body.dark-mode .header {
+      background-color: #0f0f1e;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    }
+
+    .logo-container {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .logo {
+      height: 60px;
+      transition: transform 0.3s ease;
+    }
+
+    .logo:hover {
+      transform: scale(1.05);
+    }
+
+    .school-name {
+      font-size: 1.2rem;
+      font-weight: 600;
+      color: #4a6baf;
+    }
+
+    body.dark-mode .school-name {
+      color: #6a8fd8;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 2rem;
+      align-items: center;
+    }
+
+    .nav-link {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #333;
+      text-decoration: none;
+      padding: 0.5rem 1rem;
+      border-radius: 4px;
+      transition: all 0.3s ease;
+    }
+
+    body.dark-mode .nav-link {
+      color: #e6e6e6;
+    }
+
+    .nav-link:hover {
+      color: #4a6baf;
+      background-color: rgba(106, 143, 216, 0.1);
+      transform: translateY(-2px);
+    }
+
+    body.dark-mode .nav-link:hover {
+      color: #6a8fd8;
+    }
+
+    /* Theme toggle switch */
+    .theme-switch {
+      position: relative;
+      display: inline-block;
+      width: 60px;
+      height: 30px;
+    }
+
+    .theme-switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #ccc;
+      transition: .4s;
+      border-radius: 34px;
+    }
+
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 22px;
+      width: 22px;
+      left: 4px;
+      bottom: 4px;
+      background-color: white;
+      transition: .4s;
+      border-radius: 50%;
+    }
+
+    input:checked + .slider {
+      background-color: #4a6baf;
+    }
+
+    body.dark-mode input:checked + .slider {
+      background-color: #6a8fd8;
+    }
+
+    input:checked + .slider:before {
+      transform: translateX(30px);
+    }
+
+    /* Main content styles */
+    .main-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 2rem;
+    }
+
+    .todo-container {
+      background-color: #ffffff;
+      width: 100%;
+      max-width: 600px;
+      padding: 2rem;
+      border-radius: 12px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    body.dark-mode .todo-container {
+      background-color: #2a2a3e;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+    }
+
+    h1 {
+      text-align: center;
+      color: #4a6baf;
+      margin-bottom: 1.5rem;
+      font-size: 2rem;
+    }
+
+    body.dark-mode h1 {
+      color: #6a8fd8;
+    }
+
+    /* Todo input area */
+    .input-area {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    #todo-input {
+      flex: 1;
+      padding: 0.8rem 1rem;
+      border: 1px solid #dadce0;
+      border-radius: 8px;
+      font-size: 1rem;
+      background-color: #ffffff;
+      color: #333;
+    }
+
+    body.dark-mode #todo-input {
+      border-color: #3a3a4e;
+      background-color: #2a2a3e;
+      color: #e6e6e6;
+    }
+
+    #add-btn {
+      padding: 0.8rem 1.5rem;
+      background-color: #4a6baf;
+      color: #ffffff;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.3s ease;
+    }
+
+    body.dark-mode #add-btn {
+      background-color: #6a8fd8;
+    }
+
+    #add-btn:hover {
+      background-color: #3a5a9f;
+      transform: translateY(-2px);
+    }
+
+    body.dark-mode #add-btn:hover {
+      background-color: #5a7fc8;
+    }
+
+    /* Todo list styles */
+    #todo-list {
+      list-style: none;
+    }
+
+    .todo-item {
+      display: flex;
+      align-items: center;
+      padding: 1rem;
+      margin-bottom: 0.5rem;
+      background-color: #f1f3f4;
+      border-radius: 8px;
+      transition: all 0.3s ease;
+    }
+
+    body.dark-mode .todo-item {
+      background-color: #2a2a3e;
+    }
+
+    .todo-item:hover {
+      transform: translateX(5px);
+    }
+
+    .todo-checkbox {
+      margin-right: 1rem;
+      width: 20px;
+      height: 20px;
+      cursor: pointer;
+    }
+
+    .todo-text {
+      flex: 1;
+      margin: 0 1rem;
+      transition: all 0.3s ease;
+    }
+
+    .todo-item.completed .todo-text {
+      text-decoration: line-through;
+      color: #888;
+    }
+
+    body.dark-mode .todo-item.completed .todo-text {
+      color: #aaa;
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+      .header {
+        flex-direction: column;
+        padding: 1rem;
+      }
+      
+      .logo-container {
+        flex-direction: column;
+        text-align: center;
+      }
+      
+      .nav-links {
+        margin-top: 1rem;
+        gap: 1rem;
+      }
+
+      .todo-container {
+        padding: 1.5rem;
+      }
+
+      /* Hide some shapes on mobile */
+      body::before,
+      body::after {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header with logo and navigation -->
+  <header class="header">
+    <div class="logo-container">
+      <img src="../web tech/xim.png" alt="SCSE Logo" class="logo">
+      <div class="school-name">SCHOOL OF COMPUTER SCIENCE</div>
+    </div>
+    <nav class="nav-links">
+      <a href="flashcard.html" class="nav-link">FLASHCARDS</a>
+      <a href="about.html" class="nav-link">ABOUT</a>
+      <label class="theme-switch">
+        <input type="checkbox" id="theme-toggle">
+        <span class="slider"></span>
+      </label>
+    </nav>
+  </header>
+
+  <!-- Main content -->
+  <main class="main-content">
+    <div class="todo-container">
+      <h1>To-Do List</h1>
+      
+      <div class="input-area">
+        <input type="text" id="todo-input" placeholder="Add a new task...">
+        <button id="add-btn">Add</button>
+      </div>
+      
+      <ul id="todo-list">
+        <!-- Todo items will be added here by JavaScript -->
+      </ul>
+    </div>
+  </main>
+  <script src="../web tech/todo.js" defer></script>
+</body>
+</html>
